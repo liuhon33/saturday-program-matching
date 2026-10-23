@@ -132,7 +132,7 @@ class ConfigTests(unittest.TestCase):
 
     def test_synthetic_profile_is_self_contained(self):
         cfg = load_config(CONFIG.with_name("synthetic.yaml"))
-        self.assertEqual(cfg["schema_version"], "synthetic-demo-v1")
+        self.assertEqual(cfg["schema_version"], "synthetic-full-forms-v2")
         self.assertEqual(set(cfg["subjects"]), set(self.config["subjects"]))
 
     def test_reject_duplicate_yaml_keys(self):

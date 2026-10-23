@@ -17,7 +17,7 @@ from zipfile import BadZipFile, ZipFile, ZIP_DEFLATED
 
 from openpyxl import load_workbook
 
-from generate_demo_data import datasets
+from generate_demo_data import datasets, workbook_sheets
 
 VERSION = Path(__file__).resolve().parents[1]
 
@@ -88,11 +88,13 @@ def verify_sample(payload, filename, approved_hash):
     zip_parts(payload)  # Also reject duplicate archive names explicitly.
     book = load_workbook(io.BytesIO(payload), read_only=True, data_only=False)
     try:
-        if book.sheetnames != ['Sheet1']:
+        declared_sheets = workbook_sheets()[filename]
+        if book.sheetnames != list(declared_sheets):
             raise ValueError('unexpected_synthetic_worksheets')
-        rows = [list(row) for row in book['Sheet1'].iter_rows(values_only=True)]
-        if rows != datasets()[filename]:
-            raise ValueError('synthetic_declaration_mismatch')
+        for name, declared_rows in declared_sheets.items():
+            rows = [list(row) for row in book[name].iter_rows(values_only=True)]
+            if rows != declared_rows:
+                raise ValueError('synthetic_declaration_mismatch')
         expected = {
             'creator': 'Saturday matching synthetic examples',
             'lastModifiedBy': 'Saturday matching synthetic examples',

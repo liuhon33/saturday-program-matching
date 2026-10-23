@@ -101,7 +101,7 @@ class ReleaseTests(unittest.TestCase):
 
     def test_changed_workbook_cell_is_rejected(self):
         rows = demo.datasets()["2024tutee.xlsx"]
-        rows[1][1] = "PRIVATE-CELL-SENTINEL"
+        rows[1][rows[0].index("Tutee 1 First Name")] = "PRIVATE-CELL-SENTINEL"
         self.staged["version_1/data/2024tutee.xlsx"] = demo.workbook_bytes(rows)
         with self.assertRaises(ValueError):
             self.inspect()
@@ -109,7 +109,7 @@ class ReleaseTests(unittest.TestCase):
     def test_manifest_change_does_not_bypass_declared_rows(self):
         name = '2024tutee.xlsx'
         rows = demo.datasets()[name]
-        rows[1][1] = 'PRIVATE-CELL-SENTINEL'
+        rows[1][rows[0].index("Tutee 1 First Name")] = 'PRIVATE-CELL-SENTINEL'
         payload = demo.workbook_bytes(rows)
         self.staged['version_1/data/' + name] = payload
         hashes = json.loads(self.manifest)
@@ -117,6 +117,25 @@ class ReleaseTests(unittest.TestCase):
         self.staged['version_1/tools/sample_hashes.json'] = json.dumps(hashes).encode()
         with self.assertRaises(ValueError):
             self.inspect()
+
+    def test_manifest_change_cannot_hide_extra_sheet_edits_or_omissions(self):
+        name = 'scratch_tutee.xlsx'
+        sheets = demo.workbook_sheets()[name]
+        changed_rows = [row.copy() for row in sheets['Sheet2']]
+        changed_rows[1][0] = 'PRIVATE-SECOND-SHEET-SENTINEL'
+        variants = {
+            'changed_extra_sheet': demo.workbook_bytes(sheets['Sheet1'], extra_sheets={'Sheet2': changed_rows}),
+            'missing_extra_sheet': demo.workbook_bytes(sheets['Sheet1']),
+            'undeclared_extra_sheet': demo.workbook_bytes(sheets['Sheet1'], extra_sheets={'Sheet2': sheets['Sheet2'], 'Private': [['PRIVATE-SHEET-SENTINEL']]}),
+        }
+        for case, payload in variants.items():
+            with self.subTest(case=case):
+                self.staged['version_1/data/' + name] = payload
+                hashes = json.loads(self.manifest)
+                hashes[name] = hashlib.sha256(payload).hexdigest()
+                self.staged['version_1/tools/sample_hashes.json'] = json.dumps(hashes).encode()
+                with self.assertRaises(ValueError):
+                    self.inspect()
 
     def test_hidden_zip_member_is_rejected(self):
         path = "version_1/data/2024tutee.xlsx"

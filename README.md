@@ -1,29 +1,17 @@
 # Saturday Program Matching
 
-This project helps Saturday Program coordinators pair students (tutees) with tutors using their questionnaire responses. It reads two spreadsheets, checks the data, and produces an Excel workbook of matches and students who still need a tutor.
+This project helps Saturday Program coordinators pair students (tutees) with tutors using their questionnaire responses. Give it two spreadsheets, and it creates an Excel workbook of suggested matches and students who still need a tutor.
 
 ## How it works
 
-- Checks names, subjects and preferences, and flags entries that need review.
-- Matches students one at a time using a priority score based on tutor supply and stated gender preferences. Tutors must cover the student's first-choice subject and meet any stated tutor-gender preference; additional subject matches help choose between eligible tutors.
-- Keeps people with the same name separate when they have distinct IDs, and reports every valid student as matched or unmatched.
+The program checks the responses, then assigns students one at a time using their subject choices and tutor-gender preferences. Each tutor takes one student by default. Students who cannot be matched stay on an explicit waiting list, and people with the same name can be kept separate.
 
-The default is one student per tutor. Availability and grade compatibility still need coordinator review unless those checks have been configured.
+Coordinators review the results before confirming pairs, including schedule and grade suitability.
 
 ## Try it
 
-With Python 3.12 installed, select **Code > Download ZIP** on this GitHub page and extract the downloaded folder. Open a terminal in that folder and run these commands one at a time. The second command installs the packages the program needs.
+The main example includes 80 tutors and 71 students. Its names and answers are invented, with the same question layout as the older forms.
 
-```powershell
-cd version_1
-python -m pip install -r requirements.txt
-python run_matching.py run --tutors data/2024tutor.xlsx --tutees data/2024tutee.xlsx --config config/synthetic.yaml
-```
+Follow the **[Version 1 quick start](version_1/README.md)** for step-by-step Windows and Mac commands, then open the generated `matches.xlsx` workbook.
 
-These example spreadsheets contain invented participants. The demo produces 8 matches and 4 unmatched students. Open `matches.xlsx` in the output folder printed by the program, inside `version_1/local_runs/`.
-
-## Use your own responses
-
-Download the tutor and tutee response spreadsheets, check and clean them, then run matching. Your original files stay unchanged, and processing takes place on your computer.
-
-Follow the [Version 1 guide](version_1/README.md) for the commands, duplicate-name handling and unmatched-student review. Keep real participant files and results private; the bundled `data/` folder is for examples.
+To use your own Google Forms downloads, see the [supplementary preparation guide](version_1/docs/DATA_CLEANING.md#use-your-own-google-forms-exports). Everything is processed on your computer, and the input files stay unchanged.
