@@ -1,105 +1,105 @@
-# Version 1: local, auditable greedy matching
+# Version 1: match tutors and students
 
-Version 1 retains the original urgency-first greedy algorithm and the original urgency and pair-score weights. It fixes name-based deletion and silent student truncation, separates questionnaire configuration from matching, and records normalization/corrections. Maximum-weight matching, other optimizers, and NLP for goals/career interests are deferred.
+Use two questionnaire spreadsheets to create tutor-student matches. The program checks and cleans the data, keeps a record of changes, and lists students who could not be matched. It runs on your computer and leaves your input files unchanged.
 
-## Setup and synthetic demo
+## 1. Set up
 
-Use Python 3.10 or newer; the local tested environment is CPython 3.12.4. From this directory:
+Use Python 3.12. Open a terminal in the downloaded project folder and run:
 
 ```powershell
+cd version_1
 python -m pip install -r requirements.txt
-python -B run_matching.py run --tutors data/2024tutor.xlsx --tutees data/2024tutee.xlsx --config config/synthetic.yaml
 ```
 
-The six bundled XLSX files are generated from invented records, with names such as `tutee 001`. No historical row was copied or merely pseudonymized. Addresses, contact details, institutional identifiers, uploads and narrative answers are absent. Both tutors and tutees are synthetic. Each year/scratch pair has 8 tutor rows and 12 tutee rows, including distinct IDs with the same display name and excess demand. Scratch demonstrates an explicitly approved typo alias.
-
-The command creates a new, uniquely named directory inside ignored `local_runs/`. For the 2024 demo, expect 8 matches and 4 explicitly unmatched tutees, with no configured hard-constraint violations. Each run is independently recorded; output-directory reuse is refused.
-
-## Use your real Google Forms exports privately
-
-1. Download the tutor and tutee responses from your own Google Drive/Sheets as XLSX or CSV. Keep them in a local private folder. The application has no network calls or Google credentials.
-2. Copy `config/default.yaml` to a new versioned configuration and review its field aliases, worksheet/header location and subject choices against that year's actual questionnaire. This supplied profile maps the **prepared** 2023/2024 column names; a fresh raw form may have different question wording.
-3. Validate before matching. Use the real local paths; no input file is modified.
+Run all remaining commands from this `version_1` folder. To try the invented sample data first:
 
 ```powershell
-python -B run_matching.py validate --tutors "C:\private_exports\tutors.xlsx" --tutees "C:\private_exports\tutees.xlsx" --config config/default.yaml
+python run_matching.py run --tutors data/2024tutor.xlsx --tutees data/2024tutee.xlsx --config config/synthetic.yaml
 ```
 
-4. Inspect the newly created run's `cleaning_audit.json`, `row_status.csv`, `input_summary.json`, and cleaned workbooks. Audit entries identify role, original Excel/CSV row, canonical field and rule, without recording submitted values. Unknown subjects offer approved-catalog suggestions for review, never guessed corrections.
-5. Correct your configuration's explicit aliases or prepare a private corrections CSV. Run again into a new directory. Once validation is clean:
+Expect 8 matches and 4 unmatched students. The program prints the location of a new results folder inside `local_runs/`.
+
+## 2. Prepare your Google Forms exports
+
+Download the tutor and tutee response spreadsheets as Excel (`.xlsx`) or UTF-8 CSV files. You do not need to connect a Google account to this application.
+
+For your first setup, create a local folder and copy the settings file:
 
 ```powershell
-python -B run_matching.py run --tutors "C:\private_exports\tutors.xlsx" --tutees "C:\private_exports\tutees.xlsx" --config config/default.yaml --include-contacts
+New-Item -ItemType Directory -Force private_data
+Copy-Item config/default.yaml private_data/current_schema.yaml
 ```
 
-Original names remain in private operational results. `--include-contacts` adds a separate local name/email contact sheet. Phone numbers, addresses, uploaded links and unrelated narratives are not propagated by the current output allowlist; they remain in your original private downloads. Public examples contain no phone number, so there is no risk of inventing a number belonging to a real person.
+Save your downloads there as `tutors.xlsx` and `tutees.xlsx`. Use your actual filenames in the commands if they differ. Keep real data in `private_data/`, which is excluded from Git, rather than replacing the examples in `data/`.
 
-Git ignore rules keep `local_runs/` private, but cannot prevent you from manually publishing another folder. Treat real inputs, cleaned records, corrections, identities and operational outputs as private. Do not replace tracked sample files with real exports.
+Open `private_data/current_schema.yaml` in a text editor. This file tells the program which spreadsheet questions to read. Check the worksheet names, column headings and subject choices against your exports. The supplied settings describe prepared older questionnaires, so a fresh Forms export may need different headings. An `aliases` list contains the headings accepted for that field.
 
-## Cleaning and correction utility
+Each input row must represent one person, with separate first-name and last-name fields. If a family response contains several students, prepare one row per student in a separate working copy first. Keep the original download.
 
-`clean` performs the same validation/normalization as `validate` and exports cleaned local records without matching. It does not rewrite the source workbook. Both commands return exit code 2 if any record requires review.
+## 3. Clean and check the data
 
 ```powershell
-python -B run_matching.py clean --tutors "C:\private_exports\tutors.xlsx" --tutees "C:\private_exports\tutees.xlsx" --corrections "C:\private_exports\corrections.csv"
+python run_matching.py clean --tutors private_data/tutors.xlsx --tutees private_data/tutees.xlsx --config private_data/current_schema.yaml
 ```
 
-Each run creates an empty `corrections.template.csv` with these columns:
+The program tidies spacing and recognizes approved subject labels and spelling variants. It flags unfamiliar answers for review instead of guessing. `validate` can be used in place of `clean`; both check the inputs and produce review files without matching.
 
-| Column | Meaning |
+Open the new output folder printed in the terminal:
+
+| File | What to review |
 | --- | --- |
-| `role` | `tutor` or `tutee` |
-| `source_sha256` | That role's full input-file hash from `input_summary.json` |
-| `row` | Actual source row number, including the header row |
-| `field` | Internal field, e.g. `id`, `primary`, `subjects` or `gender_preference` |
-| `value` | Reviewed replacement value; CSV-quote values containing commas |
+| `row_status.csv` | Which tutor and student rows are valid, invalid or blank |
+| `cleaning_audit.json` | What changed and what needs attention; open it in a text editor and look for `error` or `warning` |
+| `cleaned_tutors.xlsx`, `cleaned_tutees.xlsx` | Readable copies of the valid, cleaned records |
 
-A correction applies only to the exact source hash and existing nonblank row. Stale, duplicate, malformed or unmapped corrections are rejected. Empty values deliberately clear optional fields; they are not placeholders to apply automatically. Corrections and raw input remain separate. Every applied correction produces an audit event and the run manifest records the correction file hash.
+If the result says `needs_review`, resolve the flagged entries and run again. A missing worksheet or required column must be fixed in your settings before row-level review files can be produced.
 
-Normalizations are explicit: whitespace/Unicode normalization, reviewed header/subject aliases, approved typo aliases, missing optional subjects, canonical gender choices, and duplicate identity checks. Multiselect parsing recognizes complete subject labels, including labels containing commas. Unknown residual text blocks the record instead of partially accepting it. See [the cleaning guide](docs/DATA_CLEANING.md).
+**Correcting mistakes:** add an approved spelling variant to your private settings if it should apply to everyone. For one person's answer, copy the generated `corrections.template.csv` to `private_data/corrections.csv` and fill in the participant type (`tutor` or `tutee`), source-file identifier (`sha256` from `input_summary.json`), original spreadsheet row, field and replacement value. For example, use field `primary` and value `English` for a reviewed subject correction. The [cleaning guide](docs/DATA_CLEANING.md#review-correct-and-rerun) explains the columns.
 
-## Identity and accounting
+Rerun cleaning with `--corrections private_data/corrections.csv` added to the command. Use that same option when matching. Corrections apply to the exact download you reviewed; recheck them after changing or downloading the inputs again. The cleaned workbooks are review copies, not the input format to use for the next run.
 
-- Prefer a persistent `Tutor ID` / `Tutee ID` in operational exports. Names are display labels, not the key for removal.
-- When no ID is supplied, a deterministic private digest is derived from role, normalized full name and participant contact email when available. It is not a public anonymization method or a substitute for authoritative registration IDs.
-- Same-name rows with distinct IDs are retained and audited. Repeated identities are all held for review; the program never guesses which submission to keep. If two same-name people lack differentiating contact/IDs, assign reviewed IDs via corrections.
-- Every source row appears in `row_status.csv` as valid, invalid, or blank. Every valid tutee appears in a match or the unmatched list. Every tutor's used/remaining capacity is reconciled.
-- By default, any invalid row blocks matching. `--allow-partial` explicitly opts into matching the valid subset, while invalid rows remain in the ledger and the manifest says `completed_with_invalid_rows`. A zero process exit in that explicit mode does not mean the excluded rows have been resolved.
+## 4. Handle duplicate names
 
-## Rules and limitations
+- **Different people with the same name:** give each person a distinct `Tutor ID` or `Tutee ID`, using the corrections file's `id` field if needed. Both people are kept.
+- **Repeated submission by one person:** decide which submission to use in a separate working copy, record that decision privately, and keep the original download. Do not assign different IDs just to make duplicate submissions pass.
+- **No IDs supplied:** the program uses name and email, when available, to distinguish people. If identities collide, all affected rows are held for review; none is silently selected or merged.
 
-Default hard conditions are primary-subject compatibility, any stated tutor-gender preference, and tutor capacity (default 1). A zero score never substitutes for eligibility. Tutees are sorted by original rounded scarcity urgency, then stable ID. Tutors are chosen by original subject score, then stable ID. No randomness or global reassignment occurs. Exact approved canonical subject IDs replace substring matching, so corrected questionnaire labels can legitimately change matches.
+Check the source rows shown in the audit before deciding whether two entries are the same person.
 
-Missing gender preference is explicitly configured as no preference in the supplied profiles and audited. Change `normalization.missing_preference` to `error` if staff must resolve blanks. New/unrecognized choices are rejected. The config also exposes compatibility modes for deliberate comparison; the production examples use strict rules.
+## 5. Run matching
 
-Historical exports lack reliable structured tutor availability and subject-specific grade capabilities. Their checks are **disabled and reported as unevaluated**, not passed. If enabling grade/availability checks, supply the configured structured fields for both roles. The profile's `grade_values` defaults to bands 7–12 and can be extended after review; numeric grades and `Grade 9` spelling normalize to the same approved value. Slots are exact normalized `|`-separated labels. Subject-specific grade competence, recurring timetables and room allocation remain outside this model.
-
-An explicit numeric capacity may exceed one, but that represents total tutoring places, not a scheduling guarantee. The questionnaire's willingness-to-tutor-two answer is not automatically converted into capacity. Staff must approve any capacity above one, particularly whether those places form a simultaneous group or separate sessions. [Algorithm details](docs/ALGORITHM.md) explain the retained heuristic and tradeoffs.
-
-## Outputs
-
-| File | Contents |
-| --- | --- |
-| `run_manifest.json` | Version, schema/config snapshot and hash, source hashes, correction hash, code hashes, dependency versions, status |
-| `input_summary.json` | Source and record counts, schema ID, ignored-field count |
-| `cleaning_audit.json` | Value-free change/error/warning events and catalog suggestions |
-| `row_status.csv` | Every source row's review/accounting status |
-| `normalized_tutors.json`, `normalized_tutees.json` | Typed canonical records, with real display names for private runs |
-| `cleaned_tutors.xlsx`, `cleaned_tutees.xlsx` | Minimal human-readable normalized records; unrelated personal fields removed |
-| `matches.xlsx` | Matches, unmatched tutees with reasons, tutor capacity, optional separate private contacts |
-| `matching_details.json` | IDs, score components, compatibility results, unmatched reasons and aggregate checks |
-| `summary.json` | Matching/validation counts, rule totals and quality checks |
-
-Excel output writes user strings as literal text to avoid treating a name or other submitted value as a formula. Output folders are exclusive-create. A failed run is labeled failed/needs-review and is not a completed match publication.
-
-## Verify and share
+Once cleaning reports `validated`, run:
 
 ```powershell
-python -B -m unittest discover -s tests -v
-python -B tools/generate_demo_data.py --check
-python -B tools/check_release.py
+python run_matching.py run --tutors private_data/tutors.xlsx --tutees private_data/tutees.xlsx --config private_data/current_schema.yaml
 ```
 
-The synthetic generator has no input-data-reading path and refuses to overwrite existing examples. The release checker verifies complete workbook bytes against the reviewed `tools/sample_hashes.json` manifest, independently checks the synthetic rows and neutral metadata, and rejects private/unexpected tracked files. Changing the sample hashes requires reviewing the generator and data declarations together; do not update hashes to approve a real export. Run the checker before pushing, especially after handling real data. GitHub CI runs the same tests/checks. No live Drive authorization or original private data is required for any test.
+If you used a corrections file, run this version instead:
 
-The application is self-contained in this folder: code, configuration, dependencies, examples and tests do not import Version 0 or the private archive. Future work can compare other algorithms or structured/NLP career compatibility after data governance and scoring priorities are defined.
+```powershell
+python run_matching.py run --tutors private_data/tutors.xlsx --tutees private_data/tutees.xlsx --config private_data/current_schema.yaml --corrections private_data/corrections.csv
+```
+
+Add `--include-contacts` if you want a separate name/email sheet in the results. Each run creates a new folder in `local_runs/`, so earlier results stay available.
+
+Matching normally stops if any input row is invalid. The optional `--allow-partial` flag matches only valid records; use it only deliberately, and review the invalid rows separately.
+
+## 6. Review matches and unmatched students
+
+Open `matches.xlsx` in the latest results folder:
+
+| Sheet | What it shows |
+| --- | --- |
+| `Matches` | Each assigned student and tutor |
+| `Unmatched Tutees` | Students without a match, with reasons |
+| `Tutor Capacity` | Used and remaining tutoring places |
+
+In `Unmatched Tutees`, `no_eligible_tutor` means nobody met the required conditions. Check `Candidate Rejections` for subject or gender-preference conflicts. `capacity_exhausted` means no suitable place was left when that student was considered; it also covers a run with no tutors.
+
+Use the list to plan follow-up: review possible data mistakes, recruit suitable tutors, or confirm whether existing tutors can take more students. Unused capacity alone does not mean a tutor meets that student's requirements.
+
+Also check `row_status.csv`: invalid records are separate from the unmatched list. Every valid student should appear in either `Matches` or `Unmatched Tutees`.
+
+By default, matches require the first-choice subject and any stated tutor-gender preference, with one student per tutor. The program uses the original greedy approach: it assigns students in priority order without revisiting earlier pairs, so another arrangement may fit more students. Availability and grade compatibility are not checked by default; review them before confirming assignments. See [matching details](docs/ALGORITHM.md) if you need the full rules.
+
+Keep your real downloads, corrections and results private. They can contain participant names even when contact details are omitted.

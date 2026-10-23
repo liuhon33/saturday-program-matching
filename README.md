@@ -1,34 +1,29 @@
-# Saturday Program participant matching
+# Saturday Program Matching
 
-Two self-contained versions preserve the original workflow and provide a maintained local application. Version 1 keeps the original urgency-first greedy tutee algorithm. Alternative optimizers and career-goal NLP are future work.
+This project helps Saturday Program coordinators pair students (tutees) with tutors using their questionnaire responses. It reads two spreadsheets, checks the data, and produces an Excel workbook of matches and students who still need a tutor.
 
-| Folder | Purpose | Shared in Git? |
-| --- | --- | --- |
-| `version_0/` | Original script and its environment guide | Code/docs only |
-| `version_0/data/` | Six original workbooks, unchanged | **No: private local data** |
-| `version_1/` | Validated greedy matcher, cleaning tools, tests and guides | Yes |
-| `version_1/data/` | Six fully synthetic example workbooks | Yes |
-| `version_1/local_runs/` | Local validation reports, corrected copies and matching results | **No: private** |
-| `_private_archive/` | Old Git history, earlier review, legacy code, existing results and workspace clutter | **No: private** |
+## How it works
 
-These are Git publication boundaries, not changes to Windows account permissions. Do not upload a zip of the entire working folder: it includes private data and old history. The public release helper creates an allowlisted archive from tracked files.
+- Checks names, subjects and preferences, and flags entries that need review.
+- Matches students one at a time using a priority score based on tutor supply and stated gender preferences. Tutors must cover the student's first-choice subject and meet any stated tutor-gender preference; additional subject matches help choose between eligible tutors.
+- Keeps people with the same name separate when they have distinct IDs, and reports every valid student as matched or unmatched.
 
-## Try Version 1
+The default is one student per tutor. Availability and grade compatibility still need coordinator review unless those checks have been configured.
+
+## Try it
+
+With Python 3.12 installed, select **Code > Download ZIP** on this GitHub page and extract the downloaded folder. Open a terminal in that folder and run these commands one at a time. The second command installs the packages the program needs.
 
 ```powershell
 cd version_1
 python -m pip install -r requirements.txt
-python -B run_matching.py run --tutors data/2024tutor.xlsx --tutees data/2024tutee.xlsx --config config/synthetic.yaml
-python -B -m unittest discover -s tests -v
-python -B tools/check_release.py
+python run_matching.py run --tutors data/2024tutor.xlsx --tutees data/2024tutee.xlsx --config config/synthetic.yaml
 ```
 
-The demo has 8 tutors and 12 tutees. Every tutee is accounted for as matched or unmatched; same-name people with different IDs remain distinct. Default matches require a primary-subject match and any explicit tutor-gender preference. See [Version 1's guide](version_1/README.md) for private downloaded exports, corrections and output explanations.
+These example spreadsheets contain invented participants. The demo produces 8 matches and 4 unmatched students. Open `matches.xlsx` in the output folder printed by the program, inside `version_1/local_runs/`.
 
-## Sharing
+## Use your own responses
 
-The current Git repository starts with clean sharing history. The old `.git` directory is retained in `_private_archive/legacy_git/`, excluded from this repository. Do not add that history as a remote/branch or force-add private files.
+Download the tutor and tutee response spreadsheets, check and clean them, then run matching. Your original files stay unchanged, and processing takes place on your computer.
 
-The public repository is [liuhon33/saturday-program-matching](https://github.com/liuhon33/saturday-program-matching). Only the code, documentation and synthetic examples are shared. `version_1/tools/check_release.py` verifies tracked content and synthetic workbook declarations before sharing. A CI workflow repeats tests and release checks.
-
-Version 0's data remain available to the owner locally. Other people can run Version 1's samples immediately and supply their own private Forms exports through command-line paths. No connected Google account or cloud upload is part of the program.
+Follow the [Version 1 guide](version_1/README.md) for the commands, duplicate-name handling and unmatched-student review. Keep real participant files and results private; the bundled `data/` folder is for examples.
