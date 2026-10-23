@@ -29,6 +29,6 @@ The demo has 8 tutors and 12 tutees. Every tutee is accounted for as matched or 
 
 The current Git repository starts with clean sharing history. The old `.git` directory is retained in `_private_archive/legacy_git/`, excluded from this repository. Do not add that history as a remote/branch or force-add private files.
 
-Only the code, documentation and synthetic examples should be pushed to GitHub. No GitHub repository has been created and nothing has been pushed by this preparation. `version_1/tools/check_release.py` verifies tracked content and synthetic workbook declarations before sharing. A CI workflow repeats tests and release checks.
+The public repository is [liuhon33/saturday-program-matching](https://github.com/liuhon33/saturday-program-matching). Only the code, documentation and synthetic examples are shared. `version_1/tools/check_release.py` verifies tracked content and synthetic workbook declarations before sharing. A CI workflow repeats tests and release checks.
 
 Version 0's data remain available to the owner locally. Other people can run Version 1's samples immediately and supply their own private Forms exports through command-line paths. No connected Google account or cloud upload is part of the program.
