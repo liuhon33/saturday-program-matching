@@ -1,0 +1,8 @@
+* text=auto
+*.py text eol=lf
+*.md text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.xlsx -text
+# Preserve the exact legacy script bytes, including its original line endings.
+version_0/2024dataframe.py -text

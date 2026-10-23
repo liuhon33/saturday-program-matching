@@ -1,0 +1,9 @@
+# Original tested environment: CPython 3.12.4.
+pandas==2.2.3
+numpy==1.26.4
+openpyxl==3.1.2
+python-dateutil==2.9.0.post0
+pytz==2024.1
+tzdata==2023.3
+et_xmlfile==1.1.0
+six==1.16.0

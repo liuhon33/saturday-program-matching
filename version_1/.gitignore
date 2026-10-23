@@ -1,0 +1,28 @@
+# Only known application files and intentionally synthetic examples are public.
+/*
+!/.gitignore
+!/README.md
+!/requirements.txt
+!/run_matching.py
+!/saturday_match/
+!/config/
+!/docs/
+!/tools/
+!/tests/
+!/data/
+*.xlsx
+!/data/2023tutor.xlsx
+!/data/2023tutee.xlsx
+!/data/2024tutor.xlsx
+!/data/2024tutee.xlsx
+!/data/scratch_tutor.xlsx
+!/data/scratch_tutee.xlsx
+/local_runs/
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.env.*
+*.log
+# Run tools/check_release.py before committing: ignore rules do not protect
+# an already-tracked synthetic file if it is replaced with real data.

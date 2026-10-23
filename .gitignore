@@ -1,0 +1,22 @@
+# Publish only the reviewed project; originals/history/results remain local.
+/*
+!/.gitignore
+!/.gitattributes
+!/README.md
+!/version_0/
+!/version_1/
+!/.github/
+/_private_archive/
+/version_0/*
+!/version_0/2024dataframe.py
+!/version_0/README.md
+!/version_0/requirements.txt
+/version_0/data/
+**/__pycache__/
+*.py[cod]
+**/local_runs/
+**/.venv/
+**/.env
+**/.env.*
+**/*.log
+**/~$*

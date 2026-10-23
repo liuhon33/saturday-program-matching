@@ -1,0 +1,112 @@
+schema_version: synthetic-demo-v1
+# Reviewed mappings for the prepared 2023/2024 workbook headers.
+# Blank optional fields stay null. Unknown choices need a private human review.
+# No free-text narrative is interpreted and no fuzzy guess is accepted.
+description: "Version 1: explicit questionnaire mapping and urgency-first greedy policies"
+worksheets:
+  tutor: {name: Sheet1, header_row: 1}
+  tutee: {name: Sheet1, header_row: 1}
+columns:
+  tutor:
+    id: {aliases: [Tutor ID], required: false}
+    first_name: {aliases: [Tutor First Name], required: true}
+    last_name: {aliases: [Tutor Last Name], required: true}
+    subjects: {aliases: [Tutor Subjects], required: true}
+    gender: {aliases: [Tutor Gender], required: false}
+    email: {aliases: [Primary Email Address, Tutor Email], required: false}
+    capacity: {aliases: [Tutor Capacity], required: false}
+    grades: {aliases: [Teaching Grades], required: false}
+    slots: {aliases: [Available Tutoring Slots], required: false}
+  tutee:
+    id: {aliases: [Tutee ID], required: false}
+    first_name: {aliases: [Tutee 1 First Name], required: true}
+    last_name: {aliases: [Tutee 1 Last Name], required: true}
+    primary: {aliases: [Tutee 1 Primary Subject], required: true}
+    secondary: {aliases: [Tutee 1 Secondary Subject], required: false}
+    tertiary: {aliases: [Tutee 1 Tertiary Subject], required: false}
+    gender_preference: {aliases: [Gender Preference], required: false}
+    email: {aliases: [Email (Most frequently used), Tutee Email], required: false}
+    grade: {aliases: [Current Grade of Student], required: false}
+    slots: {aliases: [Available Tutoring Slots], required: false}
+subjects:
+  english:
+    label: English
+    aliases: []
+    # Deliberate, documented synthetic typo exercise; never fuzzy correction.
+    typo_aliases: [Englsh]
+  social_sciences:
+    label: Social Sciences
+    aliases: [Social Science]
+    typo_aliases: []
+  math7_10:
+    label: "Math Grades 7, 8, 9, 10"
+    aliases: []
+    typo_aliases: ["Math Grades 7,8,9,10"]
+  functions11:
+    label: Functions (Grade 11)
+    aliases: [Math Grade 11, Grade 11 Math]
+    typo_aliases: []
+  calculus12:
+    label: Calculus and/or Advanced Functions (Grade 12)
+    aliases: [Calculus and/or Functions (Grade 12)]
+    typo_aliases: []
+  science7_10:
+    label: "Science Grades 7, 8, 9, 10"
+    aliases: []
+    typo_aliases: ["Science Grades 7,8,9,10"]
+  biology: {label: Biology, aliases: [], typo_aliases: []}
+  chemistry: {label: Chemistry, aliases: [Chem], typo_aliases: []}
+  physics: {label: Physics, aliases: [], typo_aliases: []}
+  french: {label: French, aliases: [], typo_aliases: []}
+  computer_science: {label: Computer Science, aliases: [], typo_aliases: []}
+  data12: {label: Data Management (Grade 12), aliases: [], typo_aliases: []}
+  history: {label: History, aliases: [], typo_aliases: []}
+  economics: {label: Economics, aliases: [], typo_aliases: []}
+  economics11_12: {label: Economics (Grade 11/12), aliases: [], typo_aliases: []}
+  art: {label: Art, aliases: [], typo_aliases: []}
+  geography: {label: Geography, aliases: [], typo_aliases: []}
+  business: {label: Business, aliases: [], typo_aliases: []}
+  law: {label: Law, aliases: [], typo_aliases: []}
+  accounting: {label: Accounting, aliases: [], typo_aliases: []}
+  psychology: {label: Psychology, aliases: [], typo_aliases: []}
+  statistics: {label: Statistics, aliases: [], typo_aliases: []}
+  programming_c_cpp: {label: Programming in C/C++, aliases: [], typo_aliases: []}
+  design: {label: Design, aliases: [], typo_aliases: []}
+  anatomy_physiology: {label: Anatomy/Physiology, aliases: [], typo_aliases: []}
+  chinese: {label: Chinese, aliases: [], typo_aliases: []}
+  german: {label: German, aliases: [], typo_aliases: []}
+  food_nutrition: {label: Food and nutrition, aliases: [], typo_aliases: []}
+  kinesiology: {label: Kinesiology, aliases: [], typo_aliases: []}
+  philosophy: {label: Philosophy, aliases: [], typo_aliases: []}
+genders:
+  female: [Female]
+  male: [Male]
+  nonbinary: [Non-binary, Nonbinary]
+  genderfluid: [Genderfluid]
+  # "Any" was observed as a tutor gender. It does NOT satisfy a requested gender.
+  unspecified: [Prefer not to specify, Prefer not to say, Any]
+no_preference: [No preference]
+# Only these explicit gender requests are valid; unspecified tutor gender is not a request.
+preference_values: [female, male, nonbinary, genderfluid]
+# Reviewed program bands when grade enforcement is enabled; extend explicitly per year.
+grade_values: ["7", "8", "9", "10", "11", "12"]
+# Quote YAML words such as No/None to avoid implicit booleans or nulls.
+no_subject: ["N/A", "None", "No", "No third subject", "No secondary subject", "Not applicable"]
+normalization:
+  missing_preference: no_preference
+input_policy:
+  unknown_columns: ignore
+  unknown_values: review
+matching:
+  subject_policy: primary
+  gender_policy: required
+  weights: {primary: 1000000, secondary: 100, tertiary: 1}
+  urgency_weights: {primary: 10, secondary: 3, tertiary: 1}
+  urgency_scale: 100
+  gender_urgency_bonus: 1000
+  default_capacity: 1
+  # Old exports lack structured teaching-grade/availability fields.
+  # Turn these on only after adding reviewed fields and values to both roles.
+  enforce_availability: false
+  enforce_grade: false
+
